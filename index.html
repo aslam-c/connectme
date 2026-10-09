@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>My Connections</title>
+
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js">
+    </script>
+
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js">
+    </script>
+
+    <!-- Babel - required for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js">
+    </script>
+
+    <!-- Material UI -->
+    <script crossorigin src="https://unpkg.com/@mui/material@5.15.20/umd/material-ui.development.js">
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body,
+        #root {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: #f5f7fb;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .horizontal-scroll {
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+
+        .horizontal-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tag-row {
+            display: inline-flex;
+            gap: 8px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="root"></div>
+
+
+    <script type="text/babel">
+
+        /* =========================================================
+           MATERIAL UI
+           ========================================================= */
+
+        const {
+            AppBar,
+            Toolbar,
+            Typography,
+            Container,
+            Box,
+            Card,
+            CardContent,
+            TextField,
+            InputAdornment,
+            Chip,
+            Button,
+            Stack,
+            Divider,
+            Dialog,
+            DialogTitle,
+            DialogContent,
+            DialogActions,
+            Avatar,
+            Paper,
+            Badge,
+            IconButton
+        } = MaterialUI;
+
+
+        /* =========================================================
+           STATIC USER DATA
+           ========================================================= */
+
+        const initialUsers = [
+
+            {
+                id: "u001",
+                username: "arun_dev",
+                contactNumber: "+91 9876543210",
+                connectedAt: "2026-10-09T14:30:00+05:30",
+                tags: [
+                    "Kochi",
+                    "AWS",
+                    "Node.js",
+                    "Developer"
+                ]
+            },
+
+            {
+                id: "u002",
+                username: "rahul_startup",
+                contactNumber: "+91 9847012345",
+                connectedAt: "2026-10-09T13:15:00+05:30",
+                tags: [
+                    "Bangalore",
+                    "Startup",
+                    "Founder"
+                ]
+            },
+
+            {
+                id: "u003",
+                username: "nithin_tech",
+                contactNumber: "+91 9746123456",
+                connectedAt: "2026-10-09T11:40:00+05:30",
+                tags: [
+                    "Palakkad",
+                    "AI",
+                    "Python",
+                    "Friend"
+                ]
+            },
+
+            {
+                id: "u004",
+                username: "faizal_business",
+                contactNumber: "+91 9895123456",
+                connectedAt: "2026-10-08T19:20:00+05:30",
+                tags: [
+                    "Dubai",
+                    "Business",
+                    "Textile"
+                ]
+            },
+
+            {
+                id: "u005",
+                username: "sachin_football",
+                contactNumber: "+91 9966123456",
+                connectedAt: "2026-10-08T17:45:00+05:30",
+                tags: [
+                    "Kozhikode",
+                    "Football",
+                    "Friend"
+                ]
+            },
+
+            {
+                id: "u006",
+                username: "meera_design",
+                contactNumber: "+91 8129123456",
+                connectedAt: "2026-10-08T15:10:00+05:30",
+                tags: [
+                    "Kochi",
+                    "Design",
+                    "Freelancer"
+                ]
+            },
+
+            {
+                id: "u007",
+                username: "vishnu_ai",
+                contactNumber: "+91 7012345678",
+                connectedAt: "2026-10-07T20:30:00+05:30",
+                tags: [
+                    "AI",
+                    "LLM",
+                    "Startup",
+                    "Bangalore"
+                ]
+            },
+
+            {
+                id: "u008",
+                username: "anas_travel",
+                contactNumber: "+91 7994123456",
+                connectedAt: "2026-10-07T18:15:00+05:30",
+                tags: [
+                    "Travel",
+                    "Kerala",
+                    "Photography"
+                ]
+            }
+
+        ];
+
+
+        /* =========================================================
+           HELPERS
+           ========================================================= */
+
+        function formatDate(dateString) {
+
+            const date = new Date(dateString);
+
+            return date.toLocaleString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+        }
+
+
+        function getInitial(username) {
+
+            return username
+                .replace("@", "")
+                .charAt(0)
+                .toUpperCase();
+
+        }
+
+
+        /* =========================================================
+           APP
+           ========================================================= */
+
+        function App() {
+
+            const [users, setUsers] = React.useState(initialUsers);
+
+            const [search, setSearch] = React.useState("");
+
+            const [selectedTag, setSelectedTag] = React.useState("");
+
+            const [dialogOpen, setDialogOpen] = React.useState(false);
+
+            const [selectedUser, setSelectedUser] = React.useState(null);
+
+            const [newTag, setNewTag] = React.useState("");
+
+
+            /* =======================================================
+               GET ALL UNIQUE TAGS
+               ======================================================= */
+
+            const allTags = React.useMemo(() => {
+
+                const tagSet = new Set();
+
+                users.forEach(user => {
+
+                    user.tags.forEach(tag => {
+
+                        tagSet.add(tag);
+
+                    });
+
+                });
+
+                return Array.from(tagSet).sort();
+
+            }, [users]);
+
+
+            /* =======================================================
+               FILTER USERS
+               ======================================================= */
+
+            const filteredUsers = React.useMemo(() => {
+
+                const query = search
+                    .trim()
+                    .toLowerCase();
+
+                return users.filter(user => {
+
+                    const matchesSearch =
+
+                        !query ||
+
+                        user.username
+                            .toLowerCase()
+                            .includes(query) ||
+
+                        user.contactNumber
+                            .toLowerCase()
+                            .includes(query) ||
+
+                        user.tags.some(tag =>
+                            tag.toLowerCase().includes(query)
+                        );
+
+
+                    const matchesSelectedTag =
+
+                        !selectedTag ||
+
+                        user.tags.some(tag =>
+                            tag.toLowerCase() ===
+                            selectedTag.toLowerCase()
+                        );
+
+
+                    return (
+                        matchesSearch &&
+                        matchesSelectedTag
+                    );
+
+                });
+
+            }, [
+                users,
+                search,
+                selectedTag
+            ]);
+
+
+            /* =======================================================
+               ADD TAG
+               ======================================================= */
+
+            function addTag() {
+
+                const tag = newTag.trim();
+
+                if (!tag || !selectedUser) {
+                    return;
+                }
+
+
+                setUsers(currentUsers => {
+
+                    return currentUsers.map(user => {
+
+                        if (
+                            user.id !== selectedUser.id
+                        ) {
+                            return user;
+                        }
+
+
+                        const exists = user.tags.some(
+                            existingTag =>
+                                existingTag.toLowerCase() ===
+                                tag.toLowerCase()
+                        );
+
+
+                        if (exists) {
+                            return user;
+                        }
+
+
+                        return {
+                            ...user,
+
+                            tags: [
+                                ...user.tags,
+                                tag
+                            ]
+                        };
+
+                    });
+
+                });
+
+
+                setNewTag("");
+
+            }
+
+
+            /* =======================================================
+               REMOVE TAG
+               ======================================================= */
+
+            function removeTag(userId, tagToRemove) {
+
+                setUsers(currentUsers => {
+
+                    return currentUsers.map(user => {
+
+                        if (user.id !== userId) {
+                            return user;
+                        }
+
+
+                        return {
+
+                            ...user,
+
+                            tags: user.tags.filter(
+                                tag => tag !== tagToRemove
+                            )
+
+                        };
+
+                    });
+
+                });
+
+            }
+
+
+            /* =======================================================
+               OPEN TAG DIALOG
+               ======================================================= */
+
+            function openTagDialog(user) {
+
+                setSelectedUser(user);
+
+                setNewTag("");
+
+                setDialogOpen(true);
+
+            }
+
+
+            /* =======================================================
+               CLOSE DIALOG
+               ======================================================= */
+
+            function closeDialog() {
+
+                setDialogOpen(false);
+
+                setSelectedUser(null);
+
+                setNewTag("");
+
+            }
+
+
+            /* =======================================================
+               CLEAR SEARCH
+               ======================================================= */
+
+            function clearSearch() {
+
+                setSearch("");
+
+                setSelectedTag("");
+
+            }
+
+
+            /* =======================================================
+               UI
+               ======================================================= */
+
+            return (
+
+                <Box
+                    sx={{
+                        minHeight: "100vh",
+                        backgroundColor: "#f5f7fb"
+                    }}
+                >
+
+
+                    {/* ===================================================
+          HEADER
+          =================================================== */}
+
+                    <AppBar
+                        position="sticky"
+                        color="inherit"
+                        elevation={1}
+                    >
+
+                        <Toolbar>
+
+                            <Typography
+                                variant="h6"
+                                fontWeight={700}
+                                sx={{
+                                    flexGrow: 1,
+                                    color: "#111827"
+                                }}
+                            >
+                                My Connections
+                            </Typography>
+
+
+                            <Badge
+                                badgeContent={users.length}
+                                color="primary"
+                            >
+
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                        mr: 2
+                                    }}
+                                >
+                                    Users
+                                </Typography>
+
+                            </Badge>
+
+                        </Toolbar>
+
+                    </AppBar>
+
+
+                    {/* ===================================================
+          MAIN
+          =================================================== */}
+
+                    <Container
+                        maxWidth="md"
+                        sx={{
+                            py: {
+                                xs: 2,
+                                sm: 3
+                            }
+                        }}
+                    >
+
+
+                        {/* =================================================
+            SEARCH
+            ================================================= */}
+
+                        <TextField
+                            fullWidth
+                            value={search}
+                            onChange={event => {
+
+                                setSearch(
+                                    event.target.value
+                                );
+
+                                setSelectedTag("");
+
+                            }}
+                            placeholder="Search username, phone or tag..."
+                            sx={{
+                                mb: 2,
+                                backgroundColor: "white"
+                            }}
+
+                            InputProps={{
+
+                                startAdornment: (
+
+                                    <InputAdornment
+                                        position="start"
+                                    >
+                                        🔍
+                                    </InputAdornment>
+
+                                )
+
+                            }}
+
+                        />
+
+
+                        {/* =================================================
+            TAG SEARCH
+            ================================================= */}
+
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 1.5,
+                                mb: 2,
+                                border: "1px solid #e1e5eb",
+                                borderRadius: 2
+                            }}
+                        >
+
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                    display: "block",
+                                    mb: 1
+                                }}
+                            >
+                                SEARCH BY TAG
+                            </Typography>
+
+
+                            <Box
+                                className="horizontal-scroll"
+                            >
+
+                                <Box className="tag-row">
+
+
+                                    <Chip
+                                        label="All"
+                                        color={
+                                            selectedTag === ""
+                                                ? "primary"
+                                                : "default"
+                                        }
+                                        onClick={() => {
+
+                                            setSelectedTag("");
+
+                                            setSearch("");
+
+                                        }}
+                                    />
+
+
+                                    {allTags.map(tag => (
+
+                                        <Chip
+                                            key={tag}
+                                            label={tag}
+                                            variant={
+                                                selectedTag === tag
+                                                    ? "filled"
+                                                    : "outlined"
+                                            }
+                                            color={
+                                                selectedTag === tag
+                                                    ? "primary"
+                                                    : "default"
+                                            }
+                                            onClick={() => {
+
+                                                setSelectedTag(tag);
+
+                                                setSearch("");
+
+                                            }}
+                                        />
+
+                                    ))}
+
+
+                                </Box>
+
+                            </Box>
+
+                        </Paper>
+
+
+                        {/* =================================================
+            RESULT COUNT
+            ================================================= */}
+
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                mb: 1.5
+                            }}
+                        >
+
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                            >
+
+                                {filteredUsers.length}
+
+                                {" "}
+
+                                {filteredUsers.length === 1
+                                    ? "connection"
+                                    : "connections"}
+
+                            </Typography>
+
+
+                            {(search || selectedTag) && (
+
+                                <Button
+                                    size="small"
+                                    onClick={clearSearch}
+                                >
+                                    Clear
+                                </Button>
+
+                            )}
+
+                        </Box>
+
+
+                        {/* =================================================
+            USERS
+            ================================================= */}
+
+                        <Stack spacing={1.5}>
+
+
+                            {filteredUsers.map(user => (
+
+                                <Card
+                                    key={user.id}
+                                    elevation={0}
+                                    sx={{
+                                        border:
+                                            "1px solid #e1e5eb",
+                                        borderRadius: 2,
+                                        backgroundColor: "white"
+                                    }}
+                                >
+
+                                    <CardContent>
+
+
+                                        {/* =========================================
+                    USER HEADER
+                    ========================================= */}
+
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "flex-start",
+                                                gap: 1.5
+                                            }}
+                                        >
+
+
+                                            {/* AVATAR */}
+
+                                            <Avatar
+                                                sx={{
+                                                    width: 46,
+                                                    height: 46,
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                {getInitial(
+                                                    user.username
+                                                )}
+                                            </Avatar>
+
+
+                                            {/* USER DETAILS */}
+
+                                            <Box
+                                                sx={{
+                                                    flexGrow: 1,
+                                                    minWidth: 0
+                                                }}
+                                            >
+
+                                                <Typography
+                                                    variant="subtitle1"
+                                                    fontWeight={700}
+                                                    sx={{
+                                                        overflowWrap:
+                                                            "anywhere"
+                                                    }}
+                                                >
+                                                    @{user.username}
+                                                </Typography>
+
+
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
+                                                >
+                                                    📞 {user.contactNumber}
+                                                </Typography>
+
+
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                >
+                                                    Connected{" "}
+                                                    {formatDate(
+                                                        user.connectedAt
+                                                    )}
+                                                </Typography>
+
+                                            </Box>
+
+
+                                            {/* ADD TAG */}
+
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                onClick={() =>
+                                                    openTagDialog(user)
+                                                }
+                                                sx={{
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                + Tag
+                                            </Button>
+
+
+                                        </Box>
+
+
+                                        <Divider
+                                            sx={{
+                                                my: 1.5
+                                            }}
+                                        />
+
+
+                                        {/* =========================================
+                    TAGS
+                    ========================================= */}
+
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                        >
+                                            TAGS
+                                        </Typography>
+
+
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                flexWrap: "wrap",
+                                                gap: 0.7,
+                                                mt: 0.8
+                                            }}
+                                        >
+
+                                            {user.tags.map(tag => (
+
+                                                <Chip
+                                                    key={tag}
+                                                    label={tag}
+                                                    size="small"
+                                                    color={
+                                                        selectedTag === tag
+                                                            ? "primary"
+                                                            : "default"
+                                                    }
+
+                                                    onClick={() => {
+
+                                                        setSelectedTag(tag);
+
+                                                        setSearch("");
+
+                                                    }}
+
+                                                    onDelete={() =>
+                                                        removeTag(
+                                                            user.id,
+                                                            tag
+                                                        )
+                                                    }
+
+                                                />
+
+                                            ))}
+
+                                        </Box>
+
+
+                                    </CardContent>
+
+                                </Card>
+
+                            ))}
+
+
+                            {/* =============================================
+              EMPTY RESULT
+              ============================================= */}
+
+                            {filteredUsers.length === 0 && (
+
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        p: 5,
+                                        textAlign: "center",
+                                        border:
+                                            "1px solid #e1e5eb"
+                                    }}
+                                >
+
+                                    <Typography
+                                        variant="h6"
+                                        gutterBottom
+                                    >
+                                        No connections found
+                                    </Typography>
+
+
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
+                                        Try searching for another
+                                        username, phone number or tag.
+                                    </Typography>
+
+                                </Paper>
+
+                            )}
+
+
+                        </Stack>
+
+                    </Container>
+
+
+                    {/* ===================================================
+          ADD TAG DIALOG
+          =================================================== */}
+
+                    <Dialog
+                        open={dialogOpen}
+                        onClose={closeDialog}
+                        fullWidth
+                        maxWidth="xs"
+                    >
+
+
+                        <DialogTitle>
+                            Add Tag
+                        </DialogTitle>
+
+
+                        <DialogContent>
+
+
+                            {selectedUser && (
+
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                        mb: 2
+                                    }}
+                                >
+
+                                    Add a tag to{" "}
+
+                                    <strong>
+                                        @{selectedUser.username}
+                                    </strong>
+
+                                </Typography>
+
+                            )}
+
+
+                            <TextField
+                                autoFocus
+                                fullWidth
+                                label="Tag"
+                                placeholder="Kochi, AWS, Football..."
+                                value={newTag}
+                                onChange={event =>
+                                    setNewTag(
+                                        event.target.value
+                                    )
+                                }
+                                onKeyDown={event => {
+
+                                    if (
+                                        event.key === "Enter"
+                                    ) {
+
+                                        event.preventDefault();
+
+                                        addTag();
+
+                                    }
+
+                                }}
+                            />
+
+
+                            {/* EXISTING TAGS */}
+
+                            {selectedUser &&
+                                selectedUser.tags.length > 0 && (
+
+                                    <Box
+                                        sx={{
+                                            mt: 2
+                                        }}
+                                    >
+
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                        >
+                                            EXISTING TAGS
+                                        </Typography>
+
+
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                flexWrap: "wrap",
+                                                gap: 0.7,
+                                                mt: 1
+                                            }}
+                                        >
+
+                                            {selectedUser.tags.map(
+                                                tag => (
+
+                                                    <Chip
+                                                        key={tag}
+                                                        label={tag}
+                                                        size="small"
+                                                    />
+
+                                                )
+                                            )}
+
+                                        </Box>
+
+                                    </Box>
+
+                                )}
+
+
+                        </DialogContent>
+
+
+                        <DialogActions>
+
+                            <Button
+                                onClick={closeDialog}
+                            >
+                                Cancel
+                            </Button>
+
+
+                            <Button
+                                variant="contained"
+                                onClick={addTag}
+                                disabled={
+                                    !newTag.trim()
+                                }
+                            >
+                                Add Tag
+                            </Button>
+
+                        </DialogActions>
+
+
+                    </Dialog>
+
+
+                </Box>
+
+            );
+
+        }
+
+
+        /* =========================================================
+           START REACT
+           ========================================================= */
+
+        const root =
+            ReactDOM.createRoot(
+                document.getElementById("root")
+            );
+
+        root.render(
+            <App />
+        );
+
+    </script>
+
+</body>
+
+</html>
